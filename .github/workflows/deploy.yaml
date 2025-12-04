@@ -1,0 +1,45 @@
+name: Rule Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Identify changed rule files
+        id: diff
+        run: |
+          changed=$(git diff --name-only HEAD~1 HEAD | grep '^rules/' || true)
+          echo "changed=$changed" >> $GITHUB_OUTPUT
+
+      - name: Stop if no rule changes
+        if: ${{ steps.diff.outputs.changed == '' }}
+        run: echo "No rule changes detected"
+
+      - name: Build JSON payload
+        if: ${{ steps.diff.outputs.changed != '' }}
+        id: build
+        run: |
+          files="${{ steps.diff.outputs.changed }}"
+          json="[]"
+          for f in $files; do
+            sha=$(sha256sum "$f" | awk '{print $1}')
+            name=$(basename "$f")
+            json=$(echo "$json" | jq ". += [{\"name\": \"$name\", \"hash\": \"$sha\"}]")
+          done
+          echo "payload=$json" >> $GITHUB_OUTPUT
+
+      - name: Send to RequestBin
+        if: ${{ steps.build.outputs.payload != '' }}
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d "${{ steps.build.outputs.payload }}" \
+            "https://eolv76ggbxwuf1c.m.pipedream.net"
