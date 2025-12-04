@@ -2,3 +2,4 @@ title: windows_lateral_movement
 description: test rule
 severity: high
 author: me
+logic: "Detect the Evil bit"
