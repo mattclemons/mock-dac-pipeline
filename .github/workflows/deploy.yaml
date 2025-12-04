@@ -39,9 +39,11 @@ jobs:
           files="${{ steps.diff.outputs.changed }}"
           json="[]"
           for f in $files; do
-            sha=$(sha256sum "$f" | awk '{print $1}')
-            name=$(basename "$f")
-            json=$(echo "$json" | jq ". += [{\"name\": \"$name\", \"hash\": \"$sha\"}]")
+          sha=$(sha256sum "$f" | awk '{print $1}')
+          name=$(basename "$f")
+           content=$(cat "$f" | sed 's/"/\\"/g')
+
+           json=$(echo "$json" | jq ". += [{\"name\": \"$name\", \"hash\": \"$sha\", \"content\": \"$content\"}]")
           done
 
           # write JSON safely to output
