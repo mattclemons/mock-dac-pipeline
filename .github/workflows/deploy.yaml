@@ -39,11 +39,13 @@ jobs:
           files="${{ steps.diff.outputs.changed }}"
           json="[]"
           for f in $files; do
-          sha=$(sha256sum "$f" | awk '{print $1}')
-          name=$(basename "$f")
-           content=$(cat "$f" | sed 's/"/\\"/g')
+            sha=$(sha256sum "$f" | awk '{print $1}')
+            name=$(basename "$f")
 
-           json=$(echo "$json" | jq ". += [{\"name\": \"$name\", \"hash\": \"$sha\", \"content\": \"$content\"}]")
+            # base64 encode file content without line wraps
+            content_b64=$(base64 -w0 "$f")
+
+            json=$(echo "$json" | jq ". += [{\"name\": \"$name\", \"hash\": \"$sha\", \"content_b64\": \"$content_b64\"}]")
           done
 
           # write JSON safely to output
