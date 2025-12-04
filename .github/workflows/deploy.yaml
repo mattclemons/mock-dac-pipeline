@@ -13,12 +13,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Identify changed rule files
+        - name: Identify changed rule files
         id: diff
         run: |
-          changed=$(git diff --name-only HEAD~1 HEAD | grep '^rules/' || true)
-          echo "changed=$changed" >> $GITHUB_OUTPUT
+          echo "Before SHA: ${{ github.event.before }}"
+          echo "After SHA:  ${{ github.sha }}"
+          
+          changed=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep '^rules/' || true)
 
+          echo "Changed files:"
+          echo "$changed"
+
+          echo "changed=$changed" >> $GITHUB_OUTPUT
       - name: Stop if no rule changes
         if: ${{ steps.diff.outputs.changed == '' }}
         run: echo "No rule changes detected"
