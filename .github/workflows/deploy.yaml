@@ -61,4 +61,4 @@ jobs:
           curl -X POST \
             -H "Content-Type: application/json" \
             -d "${{ steps.build.outputs.payload }}" \
-            "https://eolv76ggbxwuf1c.m.pipedream.net"
+            "${{ secrets.REQUESTBIN_URL }}"
