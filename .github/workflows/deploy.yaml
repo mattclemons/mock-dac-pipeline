@@ -43,7 +43,13 @@ jobs:
             name=$(basename "$f")
             json=$(echo "$json" | jq ". += [{\"name\": \"$name\", \"hash\": \"$sha\"}]")
           done
-          echo "payload=$json" >> $GITHUB_OUTPUT
+
+          # write JSON safely to output
+          {
+            echo "payload<<EOF"
+            echo "$json"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
 
       - name: Send to RequestBin
         if: ${{ steps.build.outputs.payload != '' }}
