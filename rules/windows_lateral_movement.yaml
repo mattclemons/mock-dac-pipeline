@@ -4,3 +4,4 @@ severity: high
 author: me
 logic: "Detect the Evil bit"
 deployment: prod
+tactic: T1550.002
