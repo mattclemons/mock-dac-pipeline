@@ -1,0 +1,43 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Identify changed rule files
+        id: diff
+        run: |
+          changed=$(git diff --name-only origin/main...HEAD | grep '^rules/' || true)
+          echo "changed=$changed" >> $GITHUB_OUTPUT
+          echo "Changed files:"
+          echo "$changed"
+
+      - name: Stop if no rule changes
+        if: ${{ steps.diff.outputs.changed == '' }}
+        run: echo "No rule changes detected in this PR"
+
+      - name: Build JSON preview
+        if: ${{ steps.diff.outputs.changed != '' }}
+        run: |
+          files="${{ steps.diff.outputs.changed }}"
+          json="[]"
+          for f in $files; do
+            sha=$(sha256sum "$f" | awk '{print $1}')
+            name=$(basename "$f")
+            content_b64=$(base64 -w0 "$f")
+
+            json=$(echo "$json" | jq ". += [{\"name\": \"$name\", \"hash\": \"$sha\", \"content_b64\": \"$content_b64\"}]")
+          done
+
+          echo "Preview JSON payload:"
+          echo "$json"
